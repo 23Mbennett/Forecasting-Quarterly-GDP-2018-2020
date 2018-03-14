@@ -1,0 +1,241 @@
+OPEN DATA "C:\Users\Miles\Desktop\RMHI Docs\Paper sources\Master_data_GDP.xlsx"
+CALENDAR(Q) 1980:1
+DATA(FORMAT=XLSX,ORG=COLUMNS,SHEET="Working Qt. Nom GDP FRED(BEA)") 1980:01 2017:04 QtGDP
+SEASONAL WINTER
+SET FALL = WINTER{-1}
+SET SUMMER = WINTER{-2}
+SET SPRING = WINTER{-3}
+**After setting the seasonal dummies I will set recession dummy 08-09 through the summer 09
+SET GRRECESSION = T>=2008:01.AND.T<=2009:02
+SET TIME * 2019:04 = T
+**As we know from our last forecast their is definitely evidence of time trend in the GDP series lets begin with ols
+**Also I have created seasonal and great recession dummies above for later in analysis
+LINREG QTGDP / RESIDUAL
+# Constant TIME
+
+Linear Regression - Estimation by Least Squares
+Dependent Variable QTGDP
+Quarterly Data From 1980:01 To 2017:04
+Usable Observations                       152
+Degrees of Freedom                        150
+Centered R^2                        0.9864654
+R-Bar^2                             0.9863752
+Uncentered R^2                      0.9973373
+Mean of Dependent Variable       10024.738507
+Std Error of Dependent Variable   4977.545183
+Standard Error of Estimate         581.006022
+Sum of Squared Residuals         50635199.594
+Regression F(1,150)                10932.7134
+Significance Level of F             0.0000000
+Log Likelihood                     -1182.1157
+Durbin-Watson Statistic                0.0174
+
+    Variable                        Coeff      Std Error      T-Stat      Signif
+************************************************************************************
+1.  Constant                     1433.7984230   94.7186029     15.13745  0.00000000
+2.  TIME                          112.2998704    1.0740272    104.55962  0.00000000
+
+**Notice the low durbin stat signaling positive serial correlation, lets look at a plot of the residuals.
+@regactfit
+**As with our annual gdp series their appears to be an AR process at work lets continue are modelling with that specification
+**Using ... AR1 lets model gdp as a function of Time, Seasons & the Great Recession
+AR1(METHOD=HILU) QTGDP / RESIDUALS1
+# TIME SPRING SUMMER FALL WINTER GRRECESSION
+
+Regression with AR1 - Estimation by Hildreth-Lu Search
+Dependent Variable QTGDP
+Quarterly Data From 1980:02 To 2017:04
+Usable Observations                       151
+Degrees of Freedom                        144
+Centered R^2                        0.9998007
+R-Bar^2                             0.9997924
+Uncentered R^2                      0.9999613
+Mean of Dependent Variable       10072.607483
+Std Error of Dependent Variable   4958.881766
+Standard Error of Estimate          71.457482
+Sum of Squared Residuals         735288.72579
+Regression F(6,144)               120372.0119
+Significance Level of F             0.0000000
+Log Likelihood                      -855.3105
+Durbin-Watson Statistic                1.1040
+Q(36-1)                              124.7504
+Significance Level of Q             0.0000000
+
+    Variable                        Coeff      Std Error      T-Stat      Signif
+************************************************************************************
+1.  TIME                            190.34249     15.84285     12.01441  0.00000000
+2.  SPRING                       -13809.67421   3161.62977     -4.36790  0.00002384
+3.  SUMMER                       -13795.45354   3161.49025     -4.36359  0.00002426
+4.  FALL                         -13790.07250   3161.47376     -4.36191  0.00002442
+5.  WINTER                       -13794.05554   3161.59604     -4.36300  0.00002432
+6.  GRRECESSION                     -18.42622     51.42828     -0.35829  0.72065136
+************************************************************************************
+7.  RHO                               0.99158      0.01026     96.66898  0.00000000
+**Suprisingly we see little stat sig. on the great recession variable determined by the t - stat near zero!
+**Also their is very little evidnece of seasonality given the magnitude of the coefficents t stats are similar for seasons
+**lets try dropping the seasons
+AR1(METHOD=HILU) QTGDP
+# Constant TIME GRRECESSION
+
+Regression with AR1 - Estimation by Hildreth-Lu Search
+Dependent Variable QTGDP
+Quarterly Data From 1980:02 To 2017:04
+Usable Observations                       151
+Degrees of Freedom                        147
+Centered R^2                        0.9997958
+R-Bar^2                             0.9997916
+Uncentered R^2                      0.9999604
+Mean of Dependent Variable       10072.607483
+Std Error of Dependent Variable   4958.881766
+Standard Error of Estimate          71.586628
+Sum of Squared Residuals         753322.85978
+Regression F(3,147)               239875.0036
+Significance Level of F             0.0000000
+Log Likelihood                      -857.1399
+Durbin-Watson Statistic                1.1342
+Q(36-1)                              118.2893
+Significance Level of Q             0.0000000
+
+    Variable                        Coeff      Std Error      T-Stat      Signif
+************************************************************************************
+1.  Constant                     -14284.83047   3281.26392     -4.35345  0.00002497
+2.  TIME                            191.81052     16.22910     11.81892  0.00000000
+3.  GRRECESSION                     -28.91981     50.82484     -0.56901  0.57021813
+************************************************************************************
+4.  RHO                               0.99176      0.01026     96.63103  0.00000000
+**Well it appears that great recession has little effect on the model perhaps because their are more observations
+**I will drop recession variable and try logging the dependent variable as in annual gdp repo
+SET LNQTGDP = LOG(QTGDP)
+AR1(METHOD=HILU) LNQTGDP / RESIDUALS4
+# Constant TIME
+
+Regression with AR1 - Estimation by Hildreth-Lu Search
+Dependent Variable LNQTGDP
+Quarterly Data From 1980:02 To 2017:04
+Usable Observations                       151
+Degrees of Freedom                        148
+Centered R^2                        0.9998329
+R-Bar^2                             0.9998307
+Uncentered R^2                      0.9999994
+Mean of Dependent Variable       9.0783613221
+Std Error of Dependent Variable  0.5532585005
+Standard Error of Estimate       0.0071997637
+Sum of Squared Residuals         0.0076718164
+Regression F(2,148)               442800.8003
+Significance Level of F             0.0000000
+Log Likelihood                       532.2452
+Durbin-Watson Statistic                1.2156
+Q(36-1)                               50.4749
+Significance Level of Q             0.0437922
+
+    Variable                        Coeff      Std Error      T-Stat      Signif
+************************************************************************************
+1.  Constant                     8.9334872201 0.1354623326     65.94813  0.00000000
+2.  TIME                         0.0069978453 0.0009044615      7.73703  0.00000000
+************************************************************************************
+3.  RHO                          0.9851384918 0.0078014077    126.27702  0.00000000
+
+**This model is strong it will be hard to get much better but I will try with level version as well after diagnostics!
+@regactfit
+@bjident RESIDUALS4
+@regcrits
+
+Information Criteria
+AIC          -6.997
+SBC          -6.917
+Hannan-Quinn -6.964
+(log) FPE    -6.997
+
+UFORECAST(TO=2019:04,PRINT) LOGLEVELCAST
+
+ Entry     LNQTGDP
+ 2018:01 10.00415755
+ 2018:02 10.01115540
+ 2018:03 10.01815324
+ 2018:04 10.02515109
+ 2019:01 10.03214893
+ 2019:02 10.03914678
+ 2019:03 10.04614462
+ 2019:04 10.05314247
+
+AR1(METHOD=HILU) QTGDP
+# Constant TIME
+
+Regression with AR1 - Estimation by Hildreth-Lu Search
+Dependent Variable QTGDP
+Quarterly Data From 1980:02 To 2017:04
+Usable Observations                       151
+Degrees of Freedom                        148
+Centered R^2                        0.9997953
+R-Bar^2                             0.9997926
+Uncentered R^2                      0.9999603
+Mean of Dependent Variable       10072.607483
+Std Error of Dependent Variable   4958.881766
+Standard Error of Estimate          71.422889
+Sum of Squared Residuals         754981.89945
+Regression F(2,148)               361463.9960
+Significance Level of F             0.0000000
+Log Likelihood                      -857.3060
+Durbin-Watson Statistic                1.1458
+Q(36-1)                              116.9634
+Significance Level of Q             0.0000000
+
+    Variable                        Coeff      Std Error      T-Stat      Signif
+************************************************************************************
+1.  Constant                     -14482.34503   3311.78182     -4.37298  0.00002298
+2.  TIME                            192.44419     16.31014     11.79905  0.00000000
+************************************************************************************
+3.  RHO                               0.99182      0.01020     97.27986  0.00000000
+
+**A good model but I do think the log model notice the plot of residuals and fitted
+UFORECAST(TO=2019:04,PRINT) LEVELCAST
+
+@regcrits
+
+Information Criteria
+AIC          11.408
+SBC          11.488
+Hannan-Quinn 11.440
+(log) FPE    11.408
+AR1(METHOD=HILU) QTGDP / RESID5
+# Constant TIME
+
+Regression with AR1 - Estimation by Hildreth-Lu Search
+Dependent Variable QTGDP
+Quarterly Data From 1980:02 To 2017:04
+Usable Observations                       151
+Degrees of Freedom                        148
+Centered R^2                        0.9997953
+R-Bar^2                             0.9997926
+Uncentered R^2                      0.9999603
+Mean of Dependent Variable       10072.607483
+Std Error of Dependent Variable   4958.881766
+Standard Error of Estimate          71.422889
+Sum of Squared Residuals         754981.89945
+Regression F(2,148)               361463.9960
+Significance Level of F             0.0000000
+Log Likelihood                      -857.3060
+Durbin-Watson Statistic                1.1458
+Q(36-1)                              116.9634
+Significance Level of Q             0.0000000
+
+    Variable                        Coeff      Std Error      T-Stat      Signif
+************************************************************************************
+1.  Constant                     -14482.34503   3311.78182     -4.37298  0.00002298
+2.  TIME                            192.44419     16.31014     11.79905  0.00000000
+************************************************************************************
+3.  RHO                               0.99182      0.01020     97.27986  0.00000000
+
+@bjident resid5
+UFORECAST(TO=2019:04,PRINT) CAST3
+
+ Entry      QTGDP
+ 2018:01 14961.61628
+ 2018:02 15154.06047
+ 2018:03 15346.50467
+ 2018:04 15538.94886
+ 2019:01 15731.39305
+ 2019:02 15923.83724
+ 2019:03 16116.28143
+ 2019:04 16308.72562
+
