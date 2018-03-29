@@ -1,0 +1,50 @@
+OPEN DATA "C:\Users\Miles\Desktop\RMHI Docs\Paper sources\GDP regression and forecast data for paper\GDP regression data1.xls"
+CALENDAR(Q) 1979:4
+DATA(FORMAT=XLS,ORG=COLUMNS,SHEET="Working Regression Data") 1979:04 2017:04 CLFP COPAL GDP FEDFUNDS UNRATE
+GRAPH(STYLE=LINE) 1
+# GDP
+@bjident GDP
+BOXJENK(CONST,AR=2,DEFINE=AR2MODEL) GDP / AR2RESID
+
+Box-Jenkins - Estimation by LS Gauss-Newton
+NO CONVERGENCE IN 100 ITERATIONS
+LAST CRITERION WAS  0.0019964
+TRY INCREASING ITERS OPTION
+
+Dependent Variable GDP
+Quarterly Data From 1980:02 To 2017:04
+Usable Observations                       151
+Degrees of Freedom                        148
+Centered R^2                        0.9998263
+R-Bar^2                             0.9998240
+Uncentered R^2                      0.9999663
+Mean of Dependent Variable       10072.607483
+Std Error of Dependent Variable   4958.881766
+Standard Error of Estimate          65.789893
+Sum of Squared Residuals         640589.88821
+Log Likelihood                      -844.9010
+Durbin-Watson Statistic                2.0623
+Q(36-2)                               38.6771
+Significance Level of Q             0.2665928
+
+    Variable                        Coeff      Std Error      T-Stat      Signif
+************************************************************************************
+1.  CONSTANT                     -2452.170779  2973.827055     -0.82458  0.41093468
+2.  AR{1}                            1.429910     0.075486     18.94283  0.00000000
+3.  AR{2}                           -0.424967     0.075909     -5.59833  0.00000010
+
+
+@bjident AR2resid
+UFORECAST(TO=2020:01,EQUATION=AR2MODEL,PRINT) CASTAR2
+
+ Entry       GDP
+ 2018:01 19946.42744
+ 2018:02 20146.37275
+ 2018:03 20343.06061
+ 2018:04 20539.33651
+ 2019:01 20736.40764
+ 2019:02 20934.79095
+ 2019:03 21134.71263
+ 2019:04 21336.27639
+
+@regactfit AR2resid
